@@ -54,7 +54,6 @@ def delete_records():
         f.write(f'Удаление {N} записей заняло {end_time - start_time:.2f} секунд\n')
 
 
-
 insert_records()
 read_records()
 update_records()

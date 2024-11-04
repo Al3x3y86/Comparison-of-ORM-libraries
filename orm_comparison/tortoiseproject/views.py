@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from orm_comparison.tortoiseproject.models import Product
 from orm_comparison.tortoiseproject.db_setup import init
 from tortoise import Tortoise
+from tortoise.functions import Avg
 
 app = FastAPI()
 
@@ -17,8 +18,38 @@ async def shutdown():
 
 
 @app.get("/")
-async def product_list():
-    return await Product.all()
+async def product_list(
+        min_price: float = Query(None, description="Минимальная цена"),
+        max_price: float = Query(None, description="Максимальная цена"),
+        description: str = Query(None, description="Описание товара"),
+        sort_by_stock: bool = Query(False, description="Сортировать по количеству на складе")
+        ):
+    query = Product.all()
+
+    # Минимальная цена
+    if min_price is not None:
+        query = query.filter(price__gte=min_price)
+
+    # Максимальная цена
+    if max_price is not None:
+        query = query.filter(price__lte=max_price)
+
+    # Фильтр по описанию
+    if description:
+        query = query.filter(description__icontains=description)
+
+    # Фильтр по количеству на складе
+    if sort_by_stock:
+        query = query.order_by('stock')
+
+    # Получаем товары
+    products = await query
+
+    # Средняя цена
+    average_price_result = await Product.annotate(average_price=Avg("price")).first()
+    average_price = average_price_result.average_price if average_price_result else 0
+
+    return {"products": products, "average_price": average_price}
 
 
 @app.post("/create")

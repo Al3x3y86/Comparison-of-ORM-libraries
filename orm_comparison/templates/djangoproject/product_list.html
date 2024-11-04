@@ -1,11 +1,39 @@
 <h1>Product List</h1>
+
+<!-- Форма для фильтрации товаров и сортировки -->
+<form method="GET" action=".">
+    <label for="min_price">Минимальная цена:</label>
+    <input type="number" id="min_price" name="min_price" value="{{ request.GET.min_price }}" step="0.01">
+
+    <label for="max_price">Максимальная цена:</label>
+    <input type="number" id="max_price" name="max_price" value="{{ request.GET.max_price }}" step="0.01">
+
+    <label for="description">Тип товара (описание):</label>
+    <input type="text" id="description" name="description" value="{{ request.GET.description }}">
+
+    <label for="sort">Сортировать по количеству на складе:</label>
+    <select id="sort" name="sort">
+        <option value="">Не сортировать</option>
+        <option value="stock" {% if request.GET.sort == "stock" %}selected{% endif %}>По возрастанию количества</option>
+    </select>
+
+    <button type="submit">Применить фильтры</button>
+</form>
+
+<!-- Отображение средней цены -->
+<h2>Средняя цена товаров: {{ average_price|default:"Не указана" }}</h2>
+
+<!-- Список товаров -->
 <ul>
     {% for product in products %}
     <li>
-        {{ product.name }} - {{ product.price }}
-        <a href="{% url 'product_update' product.pk %}">Edit</a>
-        <a href="{% url 'product_delete' product.pk %}">Delete</a>
+        {{ product.name }} - {{ product.price }} руб. - Количество: {{ product.stock }} шт. - Описание: {{ product.description }}
+        <a href="{% url 'product_update' product.pk %}">Изменить</a>
+        <a href="{% url 'product_delete' product.pk %}">Удалить</a>
     </li>
+    {% empty %}
+    <li>Нет товаров, удовлетворяющих условиям поиска.</li>
     {% endfor %}
 </ul>
-<a href="{% url 'product_create' %}">Add new product</a>
+
+<a href="{% url 'product_create' %}">Добавить новый товар</a>
